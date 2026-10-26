@@ -1,0 +1,36 @@
+# Installed on the public gh-pages branch by the trusted ciphertext publisher.
+# Owner must select Settings > Pages > Source: GitHub Actions before rollout.
+name: Deploy encrypted previews
+on:
+  push:
+    branches: [gh-pages]
+permissions:
+  contents: read
+concurrency:
+  group: encrypted-pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Stage only ciphertext and public policy files
+        run: |
+          mkdir "$RUNNER_TEMP/encrypted-site"
+          cp index.html robots.txt .nojekyll "$RUNNER_TEMP/encrypted-site/"
+          if [ -d p ]; then cp -R p "$RUNNER_TEMP/encrypted-site/p"; fi
+      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: ${{ runner.temp }}/encrypted-site
+      - id: deploy
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
